@@ -1,10 +1,10 @@
 ---
 title: "Concepts of Bayesian Data Analysis: Project4"
 author:
-  - Charles Muiruri^[Universitiet Hasselt, charles.muiruri@student.uhasselt.be]
-  - Gianni Guarraci^[Universitiet Hasselt, gianni.guarraci@student.uhasselt.be]
-  - Juan Vanegas Jadan^[Universitiet Hasselt, juan.vanegasjadan@student.uhasselt.be]
-  - Ronald Makanga^[Universitiet Hasselt, ronald.makanga@student.uhasselt.be]
+  - Charles Muiruri^[Hasselt University, charles.muiruri@student.uhasselt.be]
+  - Gianni Guarraci^[Hasselt University, gianni.guarraci@student.uhasselt.be]
+  - Juan Vanegas Jadan^[Hasselt University, juan.vanegasjadan@student.uhasselt.be]
+  - Ronald Makanga^[Hasselt University, ronald.makanga@student.uhasselt.be]
 date: Report generated - `r format(Sys.time(), "%B %d, %Y")`
 output: 
   pdf_document: 
