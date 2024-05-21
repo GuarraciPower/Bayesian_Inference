@@ -1,0 +1,28 @@
+Geography, Poverty, Vaccinated, Sample Size
+Pennsylvania, <133% FPL, 539, 584
+Pennsylvania, 133% to <400% FPL, 633, 684
+Pennsylvania, >400% FPL, 918, 943
+Missouri, <133% FPL, 276, 335
+Missouri, 133% to <400% FPL, 503, 550
+Missouri, >400% FPL, 371, 401
+Washington, <133% FPL, 254, 296
+Washington, 133% to <400% FPL, 519, 578
+Washington, >400% FPL, 612, 670
+Oklahoma, <133% FPL, 258, 312
+Oklahoma, 133% to <400% FPL, 313, 354
+Oklahoma, >400% FPL, 192, 205
+Mississippi, <133% FPL, 314, 354
+Mississippi, 133% to <400% FPL, 436, 485
+Mississippi, >400% FPL, 259, 281
+Florida, <133% FPL, 298, 335
+Florida, 133% to <400% FPL, 463, 490
+Florida, >400% FPL, 380, 404
+North Carolina, <133% FPL, 229, 256
+North Carolina, 133% to <400% FPL, 394, 427
+North Carolina, >400% FPL, 393, 403
+Georgia, <133% FPL, 241, 281
+Georgia, 133% to <400% FPL, 376, 419
+Georgia,>400% FPL, 357, 367
+Wisconsin, <133% FPL, 160, 193
+Wisconsin, 133% to <400% FPL, 321, 373
+Wisconsin, >400% FPL, 300, 317
