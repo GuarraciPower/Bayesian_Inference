@@ -75,7 +75,7 @@ model1 <- function(){
 # Write model to file
 write.model(model1, here("models/model1code.txt"))
 # View file
-file.show(here("models/model1code.txt"))
+# file.show(here("models/model1code.txt"))
 ```
 
 \newpage 
@@ -86,12 +86,13 @@ file.show(here("models/model1code.txt"))
 ```{r model}
 model.out <- bugs(model_data, model_inits, 
                   parameters = parameters, model.file = here("models/model1code.txt"),
-                  n.chains = 1, n.iter = 10000, n.burnin = 5000, codaPkg = TRUE, debug = FALSE)
+                  n.chains = 1, n.iter = 10000, n.burnin = 5000, codaPkg = TRUE, debug = TRUE)
 
 # debug=TRUE opens openBug and displays traceplots and summaries
 
 out <- read.bugs(model.out)
 summary(out)
+# plot(out)
 ```
 
 ## Density plots
@@ -138,7 +139,7 @@ p_dev <- ggplot(mcmc_df, aes(x = deviance)) +
 ## Trace Plots
 
 ```{r trace_plots}
-ggplot(mcmc_long, aes(x = iteration, y = Value, color = Parameter)) +
+ggplot(mcmc_long|>filter(iteration > 4800), aes(x = iteration, y = Value, color = Parameter)) +
   geom_line() +
   scale_color_manual(values = c("blue", "green", "red", "yellow")) +
   facet_wrap(~ Parameter, scales = "free_y") +
@@ -159,6 +160,7 @@ crosscorr.plot(out)
 ```{r autocorrelation_plot, fig.height=6, fig.width=7}
 autocorr.plot(out)
 ```
+Intepretation of the results is done in the main text.
 
 \newpage
 
