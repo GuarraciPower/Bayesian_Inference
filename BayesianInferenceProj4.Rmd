@@ -271,3 +271,105 @@ autocorr.plot(out)
 
 ```
 
+\newpage
+
+QUESTION 4: Calculate the posterior probability that the vaccination coverage target (90%) is reached for each poverty group.
+
+```{r Q4_calc, fig.height=6, fig.width=7}
+# Load necessary libraries
+library(dplyr)
+library(rjags)
+library(coda)
+library(ggplot2)
+library(here)
+library(tidyr)
+
+# mcmc_samples contains the posterior samples
+mcmc_samples <- as.mcmc(out)
+posterior_samples <- as.data.frame(mcmc_samples)
+
+# Function to calculate probability from log-odds
+logit_to_prob <- function(logit) {
+  exp(logit) / (1 + exp(logit))
+}
+
+# Calculate the probabilities for each poverty group
+posterior_samples <- posterior_samples %>%
+  mutate(
+    pi_133less = logit_to_prob(beta0),
+    pi_133_400 = logit_to_prob(beta0 + beta1),
+    pi_400more = logit_to_prob(beta0 + beta2)
+  )
+
+# Calculate the proportion of samples where vaccination probability is >= 90%
+target_coverage <- 0.90
+
+prob_133less_reached <- mean(posterior_samples$pi_133less >= target_coverage)
+prob_133_400_reached <- mean(posterior_samples$pi_133_400 >= target_coverage)
+prob_400more_reached <- mean(posterior_samples$pi_400more >= target_coverage)
+
+# Print the results
+cat("Posterior probability that vaccination coverage target (90%) is reached:\n")
+cat("<133% FPL: ", prob_133less_reached, "\n")
+cat("133-400% FPL: ", prob_133_400_reached, "\n")
+cat(">400% FPL: ", prob_400more_reached, "\n")
+
+```
+
+```{r, fig.height=6, fig.width=7}
+# Combine the results into a data frame for plotting
+posterior_probs_df <- data.frame(
+  PovertyGroup = c("<133% FPL", "133-400% FPL", ">400% FPL"),
+  Probability = c(prob_133, prob_133_400, prob_400)
+)
+
+# Print the probabilities
+print(posterior_probs_df)
+```
+
+```{r, fig.height=6, fig.width=7}
+# Plot the probabilities using ggplot2
+ggplot(posterior_probs_df, aes(x = PovertyGroup, y = Probability)) +
+  geom_bar(stat = "identity", fill = c("blue", "green", "red"), alpha = 0.7) +
+  geom_text(aes(label = scales::percent(Probability, accuracy = 0.1)), vjust = -0.3, size = 5) +
+  ylim(0, 1) +
+  labs(
+    title = "Posterior Probability of Reaching 90% Vaccination Coverage",
+    x = "Poverty Group",
+    y = "Probability"
+  ) +
+  theme_minimal(base_size = 15)
+
+```
+
+```{r Q4_plot, fig.height=6, fig.width=7}
+# Assuming posterior_samples already contains the calculated probabilities
+posterior_samples <- posterior_samples %>%
+  mutate(
+    pi_133less = logit_to_prob(beta0),
+    pi_133_400 = logit_to_prob(beta0 + beta1),
+    pi_400more = logit_to_prob(beta0 + beta2)
+  )
+
+# Function to create density plot with 90% threshold line
+create_density_plot <- function(data, var, group_name) {
+  ggplot(data, aes_string(x = var)) +
+    geom_density(fill = "blue", alpha = 0.3) +
+    geom_vline(xintercept = 0.9, linetype = "dashed", color = "red") +
+    labs(title = paste("Posterior Distribution for", group_name),
+         x = "Vaccination Probability",
+         y = "Density") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5))
+}
+
+# Create density plots for each group
+p1 <- create_density_plot(posterior_samples, "pi_133less", "<133% FPL")
+p2 <- create_density_plot(posterior_samples, "pi_133_400", "133-400% FPL")
+p3 <- create_density_plot(posterior_samples, "pi_400more", ">400% FPL")
+
+# Arrange the plots
+library(gridExtra)
+grid.arrange(p1, p2, p3, ncol = 1)
+
+```
