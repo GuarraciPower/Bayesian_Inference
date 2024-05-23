@@ -75,7 +75,7 @@ model1 <- function(){
 # Write model to file
 write.model(model1, here("models/model1code.txt"))
 # View file
-file.show(here("models/model1code.txt"))
+# file.show(here("models/model1code.txt"))
 ```
 
 \newpage 
@@ -92,6 +92,10 @@ model.out <- bugs(model_data, model_inits,
 
 out <- read.bugs(model.out)
 summary(out)
+HPDinterval(out, prob = 0.95)
+# plot(out)
+# 
+# summary(out)[[1]]["beta1","Mean"]
 ```
 
 ## Density plots
@@ -103,6 +107,9 @@ mcmc_df <- as.data.frame(mcmc_samples)
 mcmc_df$iteration <- 1:nrow(mcmc_df)
 mcmc_long <- pivot_longer(mcmc_df, cols = -iteration, names_to = "Parameter", values_to = "Value")
 
+hpd <- HPDinterval(out, prob = 0.95)
+hpd[[1]]["beta1", "lower"]
+
 points_data <- data.frame(x = mcmc_df$beta0, x1 = mcmc_df$beta1,x2 = mcmc_df$beta2,
                           x3 = mcmc_df$deviance,y = rep(0, nrow(mcmc_df)))
 
@@ -110,6 +117,8 @@ ggarrange(p_beta0 <- ggplot(mcmc_df, aes(x = beta0)) +
   geom_density(fill = "blue", alpha = 0.1) +
   geom_point(data = points_data, aes(x = x, y = y)) +
   labs(title = "Posterior Distribution of beta0", x = "beta0", y = "Density")+
+  geom_vline(aes(xintercept = hpd[[1]]["beta0", "lower"]), linetype = "dashed", color = "red") +
+  geom_vline(aes(xintercept = hpd[[1]]["beta0", "upper"]), linetype = "dashed", color = "red") +
   theme_bw(base_size = 12)+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),
 
@@ -117,6 +126,8 @@ p_beta1 <- ggplot(mcmc_df, aes(x = beta1)) +
   geom_density(fill = "green", alpha = 0.1) +
   geom_point(data = points_data, aes(x = x1, y = y)) +
   labs(title = "Posterior Distribution of beta1", x = "beta1", y = "Density") +
+  geom_vline(aes(xintercept = hpd[[1]]["beta1", "lower"]), linetype = "dashed", color = "red") +
+  geom_vline(aes(xintercept = hpd[[1]]["beta1", "upper"]), linetype = "dashed", color = "red") +
   theme_bw(base_size = 12)+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),
 
@@ -124,6 +135,8 @@ p_beta2 <- ggplot(mcmc_df, aes(x = beta2)) +
   geom_density(fill = "red", alpha = 0.1) +
   geom_point(data = points_data, aes(x = x2, y = y)) +
   labs(title = "Posterior Distribution of beta2", x = "beta2", y = "Density")+
+  geom_vline(aes(xintercept = hpd[[1]]["beta2", "lower"]), linetype = "dashed", color = "red") +
+  geom_vline(aes(xintercept = hpd[[1]]["beta2", "upper"]), linetype = "dashed", color = "red") +
   theme_bw(base_size = 12)+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),
 
@@ -131,14 +144,24 @@ p_dev <- ggplot(mcmc_df, aes(x = deviance)) +
   geom_density(fill = "yellow", alpha = 0.1) +
   geom_point(data = points_data, aes(x = x3, y = y)) +
   labs(title = "Posterior Distribution of deviance", x = "Deviance", y = "Density")+
+  geom_vline(aes(xintercept = hpd[[1]]["deviance", "lower"]), linetype = "dashed", color = "red") +
+  geom_vline(aes(xintercept = hpd[[1]]["deviance", "upper"]), linetype = "dashed", color = "red") +
   theme_bw(base_size = 12)+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()), nrow = 2, ncol = 2)
 ```
 
+### Summary of posterior distribution
+
+  - The Posterior of **$\beta_0$** has a mean of **`r summary(out)[[1]]["beta0","Mean"]`** which is the central tendency of the intercept term,  with a 95% credible HPD interval of **(`r hpd[[1]]["beta0", "lower"]`, `r hpd[[1]]["beta0", "upper"]`)** in which the intercept term lies with 95% probability.
+  - The Posterior of **$\beta_1$** has a mean of **`r summary(out)[[1]]["beta1","Mean"]`** which is the central tendency of the Poverty = `133% to <400% FPL` term, with a 95% HPD interval of **(`r hpd[[1]]["beta1", "lower"]`, `r hpd[[1]]["beta1", "upper"]`)** in which this Poverty term lies with 95% probability.
+  - The Posterior of **$\beta_2$** has a mean of **`r summary(out)[[1]]["beta2","Mean"]`** which is the central tendency of the Poverty = `>400% FPL` term, with a 95% HPD interval of **(`r hpd[[1]]["beta2", "lower"]`, `r hpd[[1]]["beta2", "upper"]`)** in which this Poverty term lies with 95% probability.
+  - The Posterior of the **Deviance** has a mean of **`r summary(out)[[1]]["deviance","Mean"]`** which is the central tendency of the Deviance, with a 95% HPD interval of **(`r hpd[[1]]["deviance", "lower"]`, `r hpd[[1]]["deviance", "upper"]`)**.
+
+
 ## Trace Plots
 
 ```{r trace_plots}
-ggplot(mcmc_long, aes(x = iteration, y = Value, color = Parameter)) +
+ggplot(mcmc_long|>filter(iteration > 4800), aes(x = iteration, y = Value, color = Parameter)) +
   geom_line() +
   scale_color_manual(values = c("blue", "green", "red", "yellow")) +
   facet_wrap(~ Parameter, scales = "free_y") +
@@ -159,6 +182,7 @@ crosscorr.plot(out)
 ```{r autocorrelation_plot, fig.height=6, fig.width=7}
 autocorr.plot(out)
 ```
+Intepretation of the results is done in the main text.
 
 \newpage
 
