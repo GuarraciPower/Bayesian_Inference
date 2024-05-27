@@ -93,9 +93,24 @@ model.out <- bugs(model_data, model_inits,
 out <- read.bugs(model.out)
 summary(out)
 HPDinterval(out, prob = 0.95)
-# plot(out)
-# 
-# summary(out)[[1]]["beta1","Mean"]
+```
+## Question 1:
+```{r Q1}
+inverse_logit <- function(x) {
+  1 / (1 + exp(-x))
+}
+out.summary <- summary(out)
+beta0_mean <- out.summary[[1]]["beta0","Mean"]
+beta1_mean <- out.summary[[1]]["beta1","Mean"]
+beta2_mean <- out.summary[[1]]["beta2","Mean"]
+pi_133 <- inverse_logit(beta0_mean)
+pi_133_400 <- inverse_logit(beta1_mean + beta0_mean)
+pi_400 <- inverse_logit(beta2_mean + beta0_mean)
+
+cat("The mean probability of vaccination coverage for each poverty group is as follows:\n")
+cat("<133% FPL: ", pi_133, "\n")
+cat("133% to <400% FPL: ", pi_133_400, "\n")
+cat(">400% FPL: ", pi_400, "\n")
 ```
 
 ## Density plots
@@ -110,7 +125,7 @@ mcmc_long <- pivot_longer(mcmc_df, cols = -iteration, names_to = "Parameter", va
 hpd <- HPDinterval(out, prob = 0.95)
 hpd[[1]]["beta1", "lower"]
 
-points_data <- data.frame(x = mcmc_df$beta0, x1 = mcmc_df$beta1,x2 = mcmc_df$beta2,
+points_data <- data.frame(x = inverse_logit(mcmc_df$beta0), x1 = inverse_logit(mcmc_df$beta1),x2 = inverse_logit(mcmc_df$beta2),
                           x3 = mcmc_df$deviance,y = rep(0, nrow(mcmc_df)))
 
 ggarrange(p_beta0 <- ggplot(mcmc_df, aes(x = beta0)) +
@@ -183,6 +198,64 @@ crosscorr.plot(out)
 autocorr.plot(out)
 ```
 Intepretation of the results is done in the main text.
+
+## Question 6
+Investigate whether the vaccination coverages are distinct at the different locations by adding a location-specific intercept.
+
+For this, beta0 is assumed to be the logit of the proportion of vaccinated individuals for each location in the group less than 133% FPL, so we need to calculate it. So we will find just the proportion for groups 
+
+```{r Q6}
+model1 <- function(){
+  for (i in 1:J){
+    Y[i] ~ dbin(p[i], N[i])
+    logit(p[i]) <- beta0[i] + beta1*btn133_400_pc[i] + beta2*great_400pc[i]
+  }
+  beta1 ~ dnorm(0, 0.001)
+  beta2 ~ dnorm(0, 0.001)
+}
+
+write.model(model1, here("models/model2code.txt"))
+projdata.beta0 <- projdata %>%
+  filter(less_133pc == 1) %>%
+  group_by(Geography) %>%
+  mutate(beta0 = logit(sum(Vaccinated)/sum(Sample.Size))) %>%
+  select(Geography, beta0)
+
+projdata <- left_join(projdata, projdata.beta0, by = "Geography")
+
+model_data_loc <- list(
+  Y = projdata$Vaccinated,
+  N = projdata$Sample.Size,
+  beta0 = projdata$beta0,
+  btn133_400_pc = projdata$btn133_400_pc,
+  great_400pc = projdata$great_400pc,
+  J = nrow(projdata),
+  Location = projdata$Location
+)
+
+model_inits_loc <- list( list(beta1 = 0, beta2 = 0) )
+parameters_loc <- c("beta1", "beta2")
+model.out <- bugs(model_data_loc, model_inits_loc, 
+                  parameters = parameters_loc, model.file = here("models/model2code.txt"),
+                  n.chains = 1, n.iter = 10000, n.burnin = 5000, codaPkg = TRUE, debug = FALSE)
+
+out.loc <- read.bugs(model.out)
+```
+```{r Q6_summary}
+
+out.summary <- summary(out.loc)
+beta1_mean <- out.summary[[1]]["beta1","Mean"]
+beta2_mean <- out.summary[[1]]["beta2","Mean"]
+pi_133 <- mean(inverse_logit(projdata$beta0))
+pi_133_400 <- inverse_logit(beta1_mean + beta0_mean)
+pi_400 <- inverse_logit(beta2_mean + beta0_mean)
+
+cat("The mean probability of vaccination coverage for each poverty group is as follows:\n")
+cat("Giving a value to beta0 means that the proportion for the group less than 133% FPL is the logit of beta0 \n")
+cat("<133% FPL: ", pi_133, "\n")
+cat("133% to <400% FPL: ", pi_133_400, "\n")
+cat(">400% FPL: ", pi_400, "\n")
+```
 
 \newpage
 
