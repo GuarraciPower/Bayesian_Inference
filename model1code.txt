@@ -1,0 +1,11 @@
+model
+{
+    for (i in 1:J) {
+        Y[i] ~ dbin(p[i], N[i])
+        logit(p[i]) <- beta0 + beta1 * btn133_400_pc[i] + beta2 * 
+            great_400pc[i]
+    }
+    beta0 ~ dnorm(0.00000E+00, 0.001)
+    beta1 ~ dnorm(0.00000E+00, 0.001)
+    beta2 ~ dnorm(0.00000E+00, 0.001)
+}
