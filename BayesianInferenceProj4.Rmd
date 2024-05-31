@@ -94,7 +94,7 @@ write.model(model1, here("models/model1code.txt"))
 # model.out <- bugs(model_data, model_inits, 
 #                   parameters = parameters, model.file = here("models/model1code.txt"),
 #                   n.chains = 1, n.iter = 10000, n.burnin = 5000, codaPkg = TRUE, debug = FALSE)
-model.outq3 <- bugs(model_data, model_inits_, 
+model.outq3 <- bugs(model_data, model_inits, 
                   parameters = parameters, model.file = here("models/model1code.txt"),
                   n.chains = 3, n.iter = 10000, n.burnin = 2000, codaPkg = TRUE, debug = FALSE)
 
@@ -285,8 +285,10 @@ autocorr.plot(out)
 ```{r Q4_calc, fig.height=6, fig.width=7}
 
 # mcmc_samples contains the posterior samples
-mcmc_samples <- as.mcmc(out)
-posterior_samples <- as.data.frame(mcmc_samples)
+mcmc_samples <- as.mcmc.list(out2)
+
+posterior_samples <- do.call(rbind.data.frame, mcmc_samples)
+
 
 # Function to calculate probability from log-odds
 logit_to_prob <- function(logit) {
