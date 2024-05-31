@@ -52,14 +52,14 @@ model_data <- list(
 
 
 ```{r initial_values, include=FALSE}
-model_inits <- list(
-  list(beta0 = 0, beta1 = 0, beta2 = 0)
-)
+# model_inits <- list(
+#   list(beta0 = 0, beta1 = 0, beta2 = 0)
+# )
 
 parameters <- c("beta0", "beta1", "beta2")
 
-model_inits_ <- list(
-  list(beta0 = 0, beta1 = 0, beta2 = 0),
+model_inits <- list(
+  list(beta0 = 1, beta1 = 0, beta2 = 0),
   list(beta0 = 1, beta1 = 1, beta2 = 0),
   list(beta0 = 1, beta1 = 0, beta2 = 1)
 )
@@ -88,25 +88,25 @@ write.model(model1, here("models/model1code.txt"))
 \newpage 
 # Modeling using Open Bugs
 
-## Model
+## Question 1:
 
 ```{r model}
-model.out <- bugs(model_data, model_inits, 
-                  parameters = parameters, model.file = here("models/model1code.txt"),
-                  n.chains = 1, n.iter = 10000, n.burnin = 5000, codaPkg = TRUE, debug = FALSE)
+# model.out <- bugs(model_data, model_inits, 
+#                   parameters = parameters, model.file = here("models/model1code.txt"),
+#                   n.chains = 1, n.iter = 10000, n.burnin = 5000, codaPkg = TRUE, debug = FALSE)
 model.outq3 <- bugs(model_data, model_inits_, 
                   parameters = parameters, model.file = here("models/model1code.txt"),
                   n.chains = 3, n.iter = 10000, n.burnin = 2000, codaPkg = TRUE, debug = FALSE)
 
-# debug=TRUE opens openBug and displays traceplots and summaries
 
-out <- read.bugs(model.out)
+
+# out <- read.bugs(model.out)
 out2 <- read.bugs(model.outq3)
 # summary(out)
 # HPDinterval(out, prob = 0.95)
 ```
 
-## Question 1:
+
 
 ### The bugs model is as shown below
 
@@ -131,7 +131,7 @@ model
 inverse_logit <- function(x) {
   1 / (1 + exp(-x))
 }
-out.summary <- summary(out)
+out.summary <- summary(out2)
 beta0_mean <- out.summary[[1]]["beta0","Mean"]
 beta1_mean <- out.summary[[1]]["beta1","Mean"]
 beta2_mean <- out.summary[[1]]["beta2","Mean"]
@@ -139,6 +139,7 @@ pi_133 <- inverse_logit(beta0_mean)
 pi_133_400 <- inverse_logit(beta1_mean + beta0_mean)
 pi_400 <- inverse_logit(beta2_mean + beta0_mean)
 
+out.summary
 cat("The mean probability of vaccination coverage for each poverty group is as follows:\n")
 cat("<133% FPL: ", pi_133, "\n")
 cat("133% to <400% FPL: ", pi_133_400, "\n")
@@ -155,21 +156,21 @@ cat(">400% FPL: ", pi_400, "\n")
 parames <- c("beta0", "beta1", "beta2")
 
 # Run MCMC
-model_jag <- jags.model("model1code.txt", data = model_data, n.chains = 3, n.adapt = 1000)
-update(model_jag, 1000)
+model_jag <- jags.model("model1code.txt", data = model_data, n.chains = 3)
+#update(model_jag, 2000)
 samples_jag <- coda.samples(model_jag, variable.names = parames, n.iter = 10000)
 
 # Check convergence
 
-summary(samples_jag)
-plot(samples_jag)
-gelman.diag(samples_jag)
-effectiveSize(samples_jag)
+# summary(samples_jag)
+# plot(samples_jag)
+# gelman.diag(samples_jag)
+# effectiveSize(samples_jag)
 
 
 ```
 
-## MCMC method and check converge of the MCMC chains Convergence tests
+### MCMC method and check converge of the MCMC chains Convergence tests
 In our analysis, we used Gibbs Sampling to estimate the posterior distributions for our three  unknown parameters (beta0, beta1 and beta2). To test for convergence for our MCMC chains, we used both Gelman-Rubin convergence diagnostic and trace plots. 
 
 The Gelman-Rubin convergence diagnostic method allows us to compare within and between chain variances for each variable. Best results are obtained for parameters whose marginal posterior 
@@ -184,6 +185,7 @@ chain variance are equal, larger values mean that there is still a notable diffe
 chains. on the other hand, gelman.plot shows if the shrink factor has really converged, or 
 whether it still fluctuating. Both are results from both our functions. 
 
+### Gelman-Rubin Convergence Diagnostic
 
 ```{r}
 gelman.diag(samples_jag)
@@ -191,8 +193,13 @@ gelman.plot(samples_jag,ask=FALSE)
 
 ```
 
+
+### Trace Plots
+
 In addition, we also explored convergence of MCMC chains by looking at our trace plots for each of our unknown parameter. The trace plot shows the parameter value at the time t against the iteration
 number. 
+
+
 
 ```{r}
 traceplot(samples_jag)
@@ -207,57 +214,6 @@ traceplot(samples_jag)
 ## Question 3: Density plots
 
 ```{r density_plots, fig.height=8, fig.width=8}
-# Prep data for density and trace plots
-mcmc_samples <- as.mcmc(out)
-
-mcmc_sample2 <- bind_rows(lapply(out2, as.data.frame), .id="chain")|>
-  pivot_longer(cols=-chain, names_to = "Parameter", values_to = "Value")
-
-
-mcmc_df <- as.data.frame(mcmc_samples)
-mcmc_df$iteration <- 1:nrow(mcmc_df)
-mcmc_long_2 <- pivot_longer(mcmc_df, cols = -iteration, names_to = "Parameter", values_to = "Value")
-
-hpd <- HPDinterval(out, prob = 0.95)
-#plot(out)
-points_data <- data.frame(x = inverse_logit(mcmc_df$beta0), x1 = inverse_logit(mcmc_df$beta0 + mcmc_df$beta1),x2 = inverse_logit(mcmc_df$beta0 + mcmc_df$beta2),
-                          x3 = mcmc_df$deviance,y = rep(0, nrow(mcmc_df)))
-
-# ggarrange(p_beta0 <- ggplot(mcmc_df, aes(x = beta0)) +
-#   geom_density(fill = "blue", alpha = 0.1) +
-#   geom_point(data = points_data, aes(x = x, y = y)) +
-#   labs(title = "Posterior Distribution of beta0", x = "beta0", y = "Density")+
-#   geom_vline(aes(xintercept = hpd[[1]]["beta0", "lower"]), linetype = "dashed", color = "red") +
-#   geom_vline(aes(xintercept = hpd[[1]]["beta0", "upper"]), linetype = "dashed", color = "red") +
-#   theme_bw(base_size = 12)+
-#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),
-# 
-# p_beta1 <- ggplot(mcmc_df, aes(x = beta1)) +
-#   geom_density(fill = "green", alpha = 0.1) +
-#   geom_point(data = points_data, aes(x = x1, y = y)) +
-#   labs(title = "Posterior Distribution of beta1", x = "beta1", y = "Density") +
-#   geom_vline(aes(xintercept = hpd[[1]]["beta1", "lower"]), linetype = "dashed", color = "red") +
-#   geom_vline(aes(xintercept = hpd[[1]]["beta1", "upper"]), linetype = "dashed", color = "red") +
-#   theme_bw(base_size = 12)+
-#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),
-# 
-# p_beta2 <- ggplot(mcmc_df, aes(x = beta2)) +
-#   geom_density(fill = "red", alpha = 0.1) +
-#   geom_point(data = points_data, aes(x = x2, y = y)) +
-#   labs(title = "Posterior Distribution of beta2", x = "beta2", y = "Density")+
-#   geom_vline(aes(xintercept = hpd[[1]]["beta2", "lower"]), linetype = "dashed", color = "red") +
-#   geom_vline(aes(xintercept = hpd[[1]]["beta2", "upper"]), linetype = "dashed", color = "red") +
-#   theme_bw(base_size = 12)+
-#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),
-# 
-# p_dev <- ggplot(mcmc_df, aes(x = deviance)) +
-#   geom_density(fill = "yellow", alpha = 0.1) +
-#   geom_point(data = points_data, aes(x = x3, y = y)) +
-#   labs(title = "Posterior Distribution of deviance", x = "Deviance", y = "Density")+
-#   geom_vline(aes(xintercept = hpd[[1]]["deviance", "lower"]), linetype = "dashed", color = "red") +
-#   geom_vline(aes(xintercept = hpd[[1]]["deviance", "upper"]), linetype = "dashed", color = "red") +
-#   theme_bw(base_size = 12)+
-#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()), nrow = 2, ncol = 2)
 
 mcmc_sample2 <- bind_rows(lapply(out2, as.data.frame), .id="chain")|>
   pivot_longer(cols=-chain, names_to = "Parameter", values_to = "Value")|>
@@ -268,27 +224,8 @@ intvals <- data.frame(Parameter = c("beta0", "beta1", "beta2"),
                       Lower = c(mean(hpd_intervals2[[1]]["beta0", "lower"], hpd_intervals2[[2]]["beta0", "lower"],hpd_intervals2[[3]]["beta0", "lower"]), mean(hpd_intervals2[[1]]["beta1", "lower"], hpd_intervals2[[2]]["beta1", "lower"], hpd_intervals2[[3]]["beta1", "lower"]), mean(hpd_intervals2[[1]]["beta2", "lower"], hpd_intervals2[[2]]["beta2", "lower"], hpd_intervals2[[3]]["beta2", "lower"])),
                       Upper = c(mean(hpd_intervals2[[1]]["beta0", "upper"], hpd_intervals2[[2]]["beta0", "upper"], hpd_intervals2[[3]]["beta0", "upper"]), mean(hpd_intervals2[[1]]["beta1", "upper"], hpd_intervals2[[2]]["beta1", "upper"], hpd_intervals2[[3]]["beta1", "upper"]), mean(hpd_intervals2[[1]]["beta2", "upper"], hpd_intervals2[[2]]["beta2", "upper"], hpd_intervals2[[3]]["beta2", "upper"])))
 
-mcmc_sample2fin <- left_join(mcmc_sample2, intvals, by = "Parameter")#|>
-  # pivot_longer(cols = c("Value", "Lower", "Upper"), names_to = "Type", values_to = "Value")
+mcmc_sample2fin <- left_join(mcmc_sample2, intvals, by = "Parameter")
 
-# mcmcfinb0 <- mcmc_sample2fin|>filter(Parameter == "beta0")
-
-# mcmc_sample2fin2 <- mcmc_sample2fin|>
-#   mutate(Value=case_when(Parameter == "beta0" ~ plogis(Value),
-#                          Parameter == "beta1"  ~ plogis(Value + mcmcfinb0$Value[1]),
-#                          Parameter == "beta2" ~ plogis(Value + mcmcfinb0$Value[1]),
-#                          TRUE ~ Value))|>
-#   pivot_wider(names_from = Type, values_from = Value)
-
-# mcmc_sample2_2 <- mcmc_sample2 %>%
-#   mutate(
-#     Estimate = case_when(
-#       Parameter == "beta0" ~ Value,
-#       Parameter == "beta1" ~ Value + get("beta0", envir = .GlobalEnv),
-#       Parameter == "beta2" ~ Value + get("beta0", envir = .GlobalEnv),
-#       TRUE ~ Value
-#     )
-#   )
 
 
 ggplot(mcmc_sample2fin, aes(x = Value, fill = chain)) +
