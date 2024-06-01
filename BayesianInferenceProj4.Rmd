@@ -1,16 +1,67 @@
 ---
-title: "Concepts of Bayesian Data Analysis: Project4"
-author:
-  - Charles Muiruri^[Hasselt University, charles.muiruri@student.uhasselt.be]
-  - Gianni Guarraci^[Hasselt University, gianni.guarraci@student.uhasselt.be]
-  - Juan Vanegas Jadan^[Hasselt University, juan.vanegasjadan@student.uhasselt.be]
-  - Ronald Makanga^[Hasselt University, ronald.makanga@student.uhasselt.be]
-date: Report generated - `r format(Sys.time(), "%B %d, %Y")`
 output: 
   pdf_document: 
-    toc: true
+    latex_engine: xelatex
+header-includes:
+- \usepackage{graphics}
+- \usepackage{graphicx}
+- \usepackage{lscape}
+- \usepackage{amsfonts}
+- \usepackage{amsmath}
+- \usepackage{amsthm}
+- \usepackage{amssymb}
+- \usepackage{latexsym}
+- \usepackage{color}
+- \usepackage{verbatim}
+- \usepackage{fancyhdr}
+- \usepackage{fancybox}
+- \usepackage{titlesec}
+- \pagenumbering{roman}
 ---
 
+\newcommand{\groupname}{Introduction to Bayesian Inference - Project4}
+
+\pagestyle{fancy}
+\pagenumbering{roman}
+
+\begin{center}
+	% details
+	\Large{
+	Project: Introduction to Bayesian Inference (3579) \\
+	Project 4 \\
+	2023-2024 \\[0.5cm]
+	1st year Master of Statistics \\
+	Hasselt University	
+	}
+\end{center}
+
+\vspace*{1cm}
+\textbf{\large{Group members:}}   
+ Ronald Makanga (2365466)  
+ Juan Vanegas Jadan (2366405)  
+ Gianni Guarraci (2366293)  
+ Charles Muiruri (2365043)  
+
+\vspace*{0.5cm}
+\noindent\textit{Submission Date:} 01 June, 2024
+
+\vspace*{2.5cm}
+\textbf{\large{Lecturers:}}  
+ Prof. Dr. Christel FAES
+ 
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\pagenumbering{arabic}
+\chead{\groupname}
+\rhead{}
+\lhead{}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setcounter{page}{1}
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -52,10 +103,6 @@ model_data <- list(
 
 
 ```{r initial_values, include=FALSE}
-# model_inits <- list(
-#   list(beta0 = 0, beta1 = 0, beta2 = 0)
-# )
-
 parameters <- c("beta0", "beta1", "beta2")
 
 model_inits <- list(
@@ -79,10 +126,7 @@ model1 <- function(){
   beta2 ~ dnorm(0, 0.001)
 }
 
-# Write model to file
 write.model(model1, here("models/model1code.txt"))
-# View file
-# file.show(here("models/model1code.txt"))
 ```
 
 \newpage 
@@ -91,19 +135,17 @@ write.model(model1, here("models/model1code.txt"))
 ## Question 1:
 
 ```{r model}
-# model.out <- bugs(model_data, model_inits, 
-#                   parameters = parameters, model.file = here("models/model1code.txt"),
-#                   n.chains = 1, n.iter = 10000, n.burnin = 5000, codaPkg = TRUE, debug = FALSE)
-model.outq3 <- bugs(model_data, model_inits_, 
+suppressMessages({
+  suppressWarnings({
+model.outq3 <- bugs(model_data, model_inits, 
                   parameters = parameters, model.file = here("models/model1code.txt"),
                   n.chains = 3, n.iter = 10000, n.burnin = 2000, codaPkg = TRUE, debug = FALSE)
 
 
-
-# out <- read.bugs(model.out)
 out2 <- read.bugs(model.outq3)
-# summary(out)
-# HPDinterval(out, prob = 0.95)
+
+  })
+})
 ```
 
 
@@ -145,7 +187,6 @@ cat("<133% FPL: ", pi_133, "\n")
 cat("133% to <400% FPL: ", pi_133_400, "\n")
 cat(">400% FPL: ", pi_400, "\n")
 
-## output should be the Bugs model
 
 ```
 
@@ -156,16 +197,13 @@ cat(">400% FPL: ", pi_400, "\n")
 parames <- c("beta0", "beta1", "beta2")
 
 # Run MCMC
-model_jag <- jags.model("model1code.txt", data = model_data, n.chains = 3)
-#update(model_jag, 2000)
-samples_jag <- coda.samples(model_jag, variable.names = parames, n.iter = 10000)
+suppressMessages({
+  suppressWarnings({
+    model_jag <- jags.model("model1code.txt", data = model_data, n.chains = 3)
+    samples_jag <- coda.samples(model_jag, variable.names = parames, n.iter = 10000)
+  })
+})
 
-# Check convergence
-
-# summary(samples_jag)
-# plot(samples_jag)
-# gelman.diag(samples_jag)
-# effectiveSize(samples_jag)
 
 
 ```
@@ -202,16 +240,12 @@ number.
 
 
 ```{r}
+par(mfrow=c(2,2))
 traceplot(samples_jag)
 ```
 
 
-
-
-
-
-
-## Question 3: Density plots
+## Question 3 
 
 ```{r density_plots, fig.height=8, fig.width=8}
 
@@ -236,8 +270,6 @@ ggplot(mcmc_sample2fin, aes(x = Value, fill = chain)) +
   labs(x = "Value", y = "Density", title = "Density Plot of MCMC Samples") +
   theme_minimal()
 
-#summary(out)
-#summary(samples_jag) ## no deviance
 ```
 
 
@@ -247,39 +279,7 @@ ggplot(mcmc_sample2fin, aes(x = Value, fill = chain)) +
   - The Posterior density with relation to **$\beta_1$** has a mean of **`r plogis(summary(out2)[[1]]["beta1","Mean"] + summary(out2)[[1]]["beta0","Mean"])`** which is the probability of children vaccinated from households whose income between 133% and 400% ,  with a 95% credible HPD interval of **(`r plogis(intvals[1, 2] + intvals[2, 2])`, `r plogis(intvals[1, 3] + intvals[2, 3])`)** in which the proportion lies with 95% probability.
   - The Posterior density with relation to **$\beta_2$** has a mean of **`r plogis(summary(out2)[[1]]["beta2","Mean"] + summary(out2)[[1]]["beta0","Mean"])`** which is the probability of children vaccinated from households whose income is more than 400%,  with a 95% credible HPD interval of**(`r plogis(intvals[1, 2] + intvals[3, 2])`, `r plogis(intvals[1, 3] + intvals[3, 3])`)** in which the proportion lies with 95% probability.
 
-
-
-
-```{r trace_plots, eval=FALSE}
-
-### Trace Plots
-ggplot(mcmc_long|>filter(iteration > 4800), aes(x = iteration, y = Value, color = Parameter)) +
-  geom_line() +
-  scale_color_manual(values = c("blue", "green", "red", "yellow")) +
-  facet_wrap(~ Parameter, scales = "free_y") +
-  labs(title = "Trace Plots of MCMC Samples", x = "Iteration", y = "Parameter Value") +
-  theme_bw(base_size = 12)+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "none")
-```
-
-
-
-```{r correlation_plot, fig.height=6, fig.width=7, eval=FALSE}
-
-### Correlation plot
-crosscorr.plot(out)
-
-```
-
-
-
-```{r autocorrelation_plot, fig.height=6, fig.width=7, eval=FALSE}
-### Autocorrelation plot
-autocorr.plot(out)
-```
-
-
-## QUESTION 4: Calculate the posterior probability that the vaccination coverage target (90%) is reached for each poverty group.
+## Question 4
 
 
 ```{r Q4_calc, fig.height=6, fig.width=7}
@@ -321,13 +321,15 @@ cat(">400% FPL: ", prob_400more_reached, "\n")
 posterior_probs_df <- data.frame(
   PovertyGroup = c("<133% FPL", "133-400% FPL", ">400% FPL"),
   Probability = c(prob_133less_reached, prob_133_400_reached, prob_400more_reached)
-)
+)|>mutate(PovertyGroup = factor(PovertyGroup, levels = c("<133% FPL", "133-400% FPL", ">400% FPL")))
 
-# Print the probabilities
-posterior_probs_df
 ```
 
-```{r, fig.height=6, fig.width=7}
+
+`r posterior_probs_df`
+
+
+```{r, fig.height=6, fig.width=8}
 # Plot the probabilities using ggplot2
 ggplot(posterior_probs_df, aes(x = PovertyGroup, y = Probability)) +
   geom_bar(stat = "identity", fill = c("blue", "green", "red"), alpha = 0.7) +
@@ -342,7 +344,9 @@ ggplot(posterior_probs_df, aes(x = PovertyGroup, y = Probability)) +
 
 ```
 
-```{r Q4_plot, fig.height=6, fig.width=7}
+
+
+```{r Q4_plot, fig.height=6, fig.width=8}
 # Assuming posterior_samples already contains the calculated probabilities
 posterior_samples <- posterior_samples %>%
   mutate(
@@ -370,7 +374,7 @@ p3 <- create_density_plot(posterior_samples, "pi_400more", ">400% FPL")
 
 # Arrange the plots
 library(gridExtra)
-grid.arrange(p1, p2, p3, ncol = 1)
+grid.arrange(p1, p2, p3, ncol = 2)
 
 ```
 
@@ -386,19 +390,32 @@ grid.arrange(p1, p2, p3, ncol = 1)
 ## Question 5
 
 ```{r}
+posterior_samples <- posterior_samples %>%
+  mutate(
+    diff_133_400_vs_133less = pi_133_400 - pi_133less,
+    diff_400more_vs_133less = pi_400more - pi_133less,
+    diff_400more_vs_133_400 = pi_400more - pi_133_400
+  )
 
-jags_posterior_samples <- as.data.frame(as.matrix(samples_jag))
-# Calculate coverage reduction
-coverage_reduction <- apply(jags_posterior_samples, 1, function(params) {
-  beta1 <- params["beta1"]
-  beta2 <- params["beta2"]
+# Function to create density plot for differences
+create_diff_density_plot <- function(data, var, group_comparison) {
+  ggplot(data, aes_string(x = var)) +
+    geom_density(fill = "blue", alpha = 0.3) +
+    labs(title = stringr::str_wrap(paste("Posterior Distribution of Difference in Vaccination Probability", group_comparison), width = 60),
+         x = "Difference in Vaccination Probability",
+         y = "Density") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5))
+}
 
-  reduction <- plogis(beta1) - plogis(beta2)
-  return(reduction)
-})
+# Create density plots for differences in vaccination probabilities
+p1 <- create_diff_density_plot(posterior_samples, "diff_133_400_vs_133less", "133-400% FPL vs <133% FPL")
+p2 <- create_diff_density_plot(posterior_samples, "diff_400more_vs_133less", ">400% FPL vs <133% FPL")
+p3 <- create_diff_density_plot(posterior_samples, "diff_400more_vs_133_400", ">400% FPL vs 133-400% FPL")
 
-# Summary of coverage reduction
-summary(coverage_reduction)
+
+library(gridExtra)
+grid.arrange(p1, p2, p3, ncol = 2)
 ```
 
 ### Impact of Poverty on Vaccination Coverage:
@@ -426,62 +443,6 @@ Lower-income groups, especially the <133% FPL group, struggle to meet the target
 
 Investigate whether the vaccination coverages are distinct at the different locations by adding a location-specific intercept.
 
-For this, beta0 is assumed to be the logit of the proportion of vaccinated individuals for each location in the group less than 133% FPL, so we need to calculate it. So we will find just the proportion for groups 
-
-```{r Q6, eval=FALSE}
-model1 <- function(){
-  for (i in 1:J){
-    Y[i] ~ dbin(p[i], N[i])
-    logit(p[i]) <- beta0[i] + beta1*btn133_400_pc[i] + beta2*great_400pc[i]
-  }
-  beta1 ~ dnorm(0, 0.001)
-  beta2 ~ dnorm(0, 0.001)
-}
-
-write.model(model1, here("models/model2code.txt"))
-projdata.beta0 <- projdata %>%
-  filter(less_133pc == 1) %>%
-  group_by(Geography) %>%
-  mutate(beta0 = logit(sum(Vaccinated)/sum(Sample.Size))) %>%
-  select(Geography, beta0)
-
-projdata <- left_join(projdata, projdata.beta0, by = "Geography")
-
-model_data_loc <- list(
-  Y = projdata$Vaccinated,
-  N = projdata$Sample.Size,
-  beta0 = projdata$beta0,
-  btn133_400_pc = projdata$btn133_400_pc,
-  great_400pc = projdata$great_400pc,
-  J = nrow(projdata),
-  Location = projdata$Location
-)
-
-model_inits_loc <- list( list(beta1 = 0, beta2 = 0) )
-parameters_loc <- c("beta1", "beta2")
-model.out <- bugs(model_data_loc, model_inits_loc, 
-                  parameters = parameters_loc, model.file = here("models/model2code.txt"),
-                  n.chains = 1, n.iter = 10000, n.burnin = 5000, codaPkg = TRUE, debug = FALSE)
-
-out.loc <- read.bugs(model.out)
-```
-
-
-```{r Q6_summary, eval=FALSE}
-
-out.summary <- summary(out.loc)
-beta1_mean <- out.summary[[1]]["beta1","Mean"]
-beta2_mean <- out.summary[[1]]["beta2","Mean"]
-pi_133 <- mean(inverse_logit(projdata$beta0))
-pi_133_400 <- inverse_logit(beta1_mean + beta0_mean)
-pi_400 <- inverse_logit(beta2_mean + beta0_mean)
-
-cat("The mean probability of vaccination coverage for each poverty group is as follows:\n")
-cat("Giving a value to beta0 means that the proportion for the group less than 133% FPL is the logit of beta0 \n")
-cat("<133% FPL: ", pi_133, "\n")
-cat("133% to <400% FPL: ", pi_133_400, "\n")
-cat(">400% FPL: ", pi_400, "\n")
-```
 
 
 ```{r question_6_jags}
@@ -504,7 +465,6 @@ modeljags <- function(){
     logit(p[i]) <-  beta1*btn133_400_pc[i] + beta2*great_400pc[i] + beta_location[location[i]]
   }
   #priors
-  beta0 ~ dnorm(0, 0.001)
   beta1 ~ dnorm(0, 0.001)
   beta2 ~ dnorm(0, 0.001)
   for (j in 1:J_locations) {
@@ -513,31 +473,59 @@ modeljags <- function(){
 }
 
 
+model.inits2 <- list(
+  list(beta_location = rep(1, model_data_jags$J_locations), beta1 = 0, beta2 = 0),
+  list(beta_location = rep(1, model_data_jags$J_locations), beta1 = 1, beta2 = 0),
+  list(beta_location = rep(1, model_data_jags$J_locations), beta1 = 0, beta2 = 1)
+)
+
+
 params_loc_jags <- c("beta1", "beta2", "beta_location")
+
 # Write model to file
 write.model(modeljags, here("model3code.txt"))
-# View file
-#file.show(here("model3code.txt"))
-jags_mod2 <- jags.model("model3code.txt", data = model_data_jags, n.chains = 3, n.adapt = 1000)
-update(jags_mod2, 2000)
-jags_samples_extended <- coda.samples(jags_mod2, variable.names = params_loc_jags, n.iter = 10000)
+suppressMessages({
+  suppressWarnings({
+    jags_mod2 <- jags.model("model3code.txt", data = model_data_jags,inits = model.inits2, n.chains = 3, n.adapt = 1000)
+    update(jags_mod2, 2000)
+    jags_samples_extended <- coda.samples(jags_mod2, variable.names = params_loc_jags, n.iter = 10000)
+  })
+})
 
-# Check convergence
-#print(summary(jags_samples_extended))
-plot(jags_samples_extended)
-#gelman.diag(jags_samples_extended)
-#effectiveSize(jags_samples_extended)
+```
+
+### The bugs model is as shown below
+
+```
+model
+{
+    for (i in 1:J) {
+        Y[i] ~ dbin(p[i], N[i])
+        logit(p[i]) <- beta1 * btn133_400_pc[i] + beta2 * great_400pc[i] + 
+            beta_location[location[i]]
+    }
+    beta1 ~ dnorm(0.00000E+00, 0.001)
+    beta2 ~ dnorm(0.00000E+00, 0.001)
+    for (j in 1:J_locations) {
+        beta_location[j] ~ dnorm(0.00000E+00, 0.001)
+    }
+}
+
+```
+
+### Gelman-Rubin Convergence Diagnostic
+
+```{r}
+
+gelman.diag(jags_samples_extended)
+gelman.plot(jags_samples_extended,ask=FALSE)
 
 ```
 
 ## Question 7
 
-
 ```{r}
-jag7samples <- coda.samples(jags_mod2, variable.names = c("beta0", "beta1", "beta2", "beta_location"), n.iter = 10000)
 
-# Convert to a data frame
-#jag7posterior_samples <- do.call(rbind, lapply(jag7_samples_extended, as.data.frame))
 posterior_samples2 <- as.matrix(jags_samples_extended)
 
 #  Calculate the mean and 95% credible intervals
@@ -555,10 +543,6 @@ coverage_df <- data.frame(location = rep(colnames(coverage_estimates), each = 3)
 betas_loc <- coverage_df |>
   slice(1:6)
 
-# logit_to_prob <- function(logit) {
-#   exp(logit) / (1 + exp(logit))
-# }
-
 betas_loc_est <- coverage_df |>
   slice(7:nrow(coverage_df))|>
   mutate(coverage_133pc = plogis(coverage),
@@ -572,23 +556,22 @@ betas_loc_est <- coverage_df |>
            estimate_type == "lower.2.5%" ~ plogis(coverage + betas_loc$coverage[5]),
            estimate_type == "upper.97.5%" ~ plogis(coverage + betas_loc$coverage[6])
          ))|>select(-coverage)|>pivot_longer(cols = c(coverage_133pc, coverage_133_400pc, coverage_400pc), names_to = "povlevel", values_to = "coverage")|>pivot_wider(names_from = estimate_type, values_from = coverage)|>
-  mutate(location2 = paste0(location, povlevel),
+  mutate(
+         location = factor(location, levels = c("beta_location[1]", "beta_location[2]", "beta_location[3]", "beta_location[4]", "beta_location[5]", "beta_location[6]", "beta_location[7]", "beta_location[8]", "beta_location[9]"), labels = c("Florida", "Georgia", "Mississippi", "Missouri", "North Carolina", "Oklahoma", "Pennsylvania", "Washington", "Wisconsin")),
+         povlevel = factor(povlevel, levels = c("coverage_133pc", "coverage_133_400pc", "coverage_400pc"), labels = c("<133% FPL", "133% to <400% FPL", ">400% FPL")),
+         location2 = paste0(location,"_", povlevel),
          location2 = factor(location2, levels = location2[order(-mean)]))
-
-coverage_df_wide <- coverage_df %>%
-  pivot_wider(names_from = estimate_type, values_from = coverage)
 
 #  Plot the data
 
-ggplot(betas_loc_est, aes(x = location2, y = mean, ymin = `lower.2.5%`, ymax = `upper.97.5%`)) +
+ggplot(betas_loc_est, aes(x = location2, y = mean, ymin = `lower.2.5%`, ymax = `upper.97.5%`, colour = povlevel)) +
   geom_pointrange() +
   coord_flip() +
-  labs(x = "Location", y = "Estimated Vaccination Coverage")+
+  labs(x = "Geographic location", y = "Estimated Vaccination Coverage", colour = "Poverty Level")+
   theme_bw(base_size = 12)
 
-
 ```
-
+This caterpillar plot displays the expected coverage for each geographic region within our data. The point represents the meancoverage while the error bars represent the 95% credible interval. The plot shows that the expected coverage for each region is distinct.
 
 ## Question 8
 
@@ -623,7 +606,7 @@ View(dfe)
 dfe|>flextable::flextable()|>flextable::autofit()
 
 ```
-
+This table shows the estimated number of vaccinated children in Mississippi by poverty group. The estimated number of vaccinated children from households with income less than 133% FPL is `r round(pred_vaccinated_133FPL,0)`, from households with income between 133% and 400% FPL is  `r round(pred_vaccinated_133_400FPL,0)`,and from households with income greater than 400% FPL is `r round(pred_vaccinated_400FPL,0)`.
 
 \newpage
 
