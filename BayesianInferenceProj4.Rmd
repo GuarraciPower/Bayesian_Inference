@@ -285,8 +285,10 @@ ggplot(mcmc_sample2fin, aes(x = Value, fill = chain)) +
 ```{r Q4_calc, fig.height=6, fig.width=7}
 
 # mcmc_samples contains the posterior samples
-mcmc_samples <- as.mcmc(out)
-posterior_samples <- as.data.frame(mcmc_samples)
+mcmc_samples <- as.mcmc.list(out2)
+
+posterior_samples <- do.call(rbind.data.frame, mcmc_samples)
+
 
 # Function to calculate probability from log-odds
 logit_to_prob <- function(logit) {
@@ -524,7 +526,7 @@ gelman.plot(jags_samples_extended,ask=FALSE)
 
 ## Question 7
 
-```{r}
+```{r fig.height=10, fig.width=8}
 
 posterior_samples2 <- as.matrix(jags_samples_extended)
 
@@ -567,7 +569,7 @@ betas_loc_est <- coverage_df |>
 ggplot(betas_loc_est, aes(x = location2, y = mean, ymin = `lower.2.5%`, ymax = `upper.97.5%`, colour = povlevel)) +
   geom_pointrange() +
   coord_flip() +
-  labs(x = "Geographic location", y = "Estimated Vaccination Coverage", colour = "Poverty Level")+
+  labs(x = "Geographic location", y = "Estimated Vaccination Coverage", colour = "Poverty Level", title = "Caterpillar Plot for each Location")+
   theme_bw(base_size = 12)
 
 ```
@@ -602,7 +604,6 @@ pred_vaccinated_133FPL <- n_others * mean_coverage_133FPL
 datsr<-rbind(c("133-400% FPL", as.numeric(round(pred_vaccinated_133_400FPL,0))), c(">400% FPL", as.numeric(round(pred_vaccinated_400FPL,0))), c("<133% FPL", as.numeric(round(pred_vaccinated_133FPL,0))))
 
 dfe<-datsr|>data.table::as.data.table()|>data.table::setnames(c("Poverty", "Estimate"))|>dplyr::mutate(Estimate = as.numeric(Estimate))|>janitor::adorn_totals(c("row"))
-View(dfe)
 dfe|>flextable::flextable()|>flextable::autofit()
 
 ```
