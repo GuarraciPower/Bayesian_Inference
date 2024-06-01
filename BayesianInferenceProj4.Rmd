@@ -94,7 +94,7 @@ write.model(model1, here("models/model1code.txt"))
 # model.out <- bugs(model_data, model_inits, 
 #                   parameters = parameters, model.file = here("models/model1code.txt"),
 #                   n.chains = 1, n.iter = 10000, n.burnin = 5000, codaPkg = TRUE, debug = FALSE)
-model.outq3 <- bugs(model_data, model_inits, 
+model.outq3 <- bugs(model_data, model_inits_, 
                   parameters = parameters, model.file = here("models/model1code.txt"),
                   n.chains = 3, n.iter = 10000, n.burnin = 2000, codaPkg = TRUE, debug = FALSE)
 
@@ -285,10 +285,8 @@ autocorr.plot(out)
 ```{r Q4_calc, fig.height=6, fig.width=7}
 
 # mcmc_samples contains the posterior samples
-mcmc_samples <- as.mcmc.list(out2)
-
-posterior_samples <- do.call(rbind.data.frame, mcmc_samples)
-
+mcmc_samples <- as.mcmc(out)
+posterior_samples <- as.data.frame(mcmc_samples)
 
 # Function to calculate probability from log-odds
 logit_to_prob <- function(logit) {
@@ -376,6 +374,14 @@ grid.arrange(p1, p2, p3, ncol = 1)
 
 ```
 
+### Posterior Probabilities of Reaching 90% Vaccination Coverage:
+
+* <133% FPL: Only 'r round(prob_133less_reached * 100, 2)'% of the time does the vaccination coverage meet or exceed 90%, indicating lower vaccination rates in this poverty group.
+
+* 133-400% FPL: With a r' round(prob_133_400_reached * 100, 2)'% probability, this group has a better chance of meeting the 90% target, showing improvement compared to the <133% FPL group.
+
+* >400% FPL: This group has a r' round(prob_400more_reached * 100, 2)'% probability of reaching or exceeding 90% coverage, indicating high vaccination rates.
+
 
 ## Question 5
 
@@ -394,6 +400,26 @@ coverage_reduction <- apply(jags_posterior_samples, 1, function(params) {
 # Summary of coverage reduction
 summary(coverage_reduction)
 ```
+
+### Impact of Poverty on Vaccination Coverage:
+
+* 133-400% FPL vs <133% FPL: The mean difference in vaccination coverage is 'r round(diff_133_400_vs_133less_summary["Mean"], 4)' with a 95% credible interval of ['r round(diff_133_400_vs_133less_summary["2.5%"], 4)', 'r round(diff_133_400_vs_133less_summary["97.5%"], 4)'] suggests that vaccination coverage is higher by about 'r round(diff_133_400_vs_133less  * 100, 2)'% in the 133-400% FPL group compared to the <133% FPL group.
+
+* >400% FPL vs <133% FPL: A mean difference of in vaccination coverage is 'r round(diff_400more_vs_133less_summary["Mean"], 4)' with a 95% credible interval of ['r round(diff_400more_vs_133less_summary["2.5%"], 4)', 'r round(diff_400more_vs_133less_summary["97.5%"], 4)'] indicates that the >400% FPL group has a higher vaccination coverage by about 'r round(diff_400more_vs_133less  * 100, 2)'% compared to the <133% FPL group.
+
+* >400% FPL vs 133-400% FPL: The mean difference of in vaccination coverage is 'r round(diff_400more_vs_133_400_summary["Mean"], 4)' with a 95% credible interval of ['r round(diff_400more_vs_133_400_summary["2.5%"], 4)', 'r round(diff_400more_vs_133_400_summary["97.5%"], 4)'] shows that the highest income group (>400% FPL) has about 'r round(diff_400more_vs_133_400  * 100, 2)'% higher coverage compared to the middle-income group (133-400% FPL).
+
+
+## Insights
+
+Income Gradient in Vaccination Coverage:
+
+* There is a clear gradient in vaccination coverage by poverty level, with higher-income groups achieving better vaccination rates. This suggests that income is a significant factor in vaccination coverage.
+
+## Target Achievement:
+
+* The highest income group (>400% FPL) consistently meets or exceeds the 90% vaccination coverage target, indicating successful vaccination efforts in this group.
+Lower-income groups, especially the <133% FPL group, struggle to meet the target. highlighting the need for targeted interventions.
 
 
 ## Question 6 
