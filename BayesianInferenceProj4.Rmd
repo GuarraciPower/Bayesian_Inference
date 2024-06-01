@@ -185,9 +185,10 @@ out.summary
 
 
 The mean probability of vaccination coverage for each poverty group is as follows:  
-  - $<133$% FPL: `r pi_133`  
-  - 133% to <400% FPL: `r pi_133_400`  
-  - $>400$% FPL: `r pi_400`  
+
+* $<133$% FPL: `r pi_133`  
+* 133% to <400% FPL: `r pi_133_400`  
+* $>400$% FPL: `r pi_400`  
 
 # Question 2
 
@@ -260,9 +261,9 @@ ggplot(mcmc_sample2fin, aes(x = Value, fill = chain)) +
 
 ## Summary of posterior distribution
 
-  - The Posterior density with relation to **$\beta_0$** has a mean of **`r plogis(summary(out2)[[1]]["beta0","Mean"])`** which is the probability of children vaccinated from households whose income is less than 133%,  with a 95% credible HPD interval of **(`r plogis(intvals[1, 2])`, `r plogis(intvals[1, 3])`)** in which the proportion lies with 95% probability.
-  - The Posterior density with relation to **$\beta_1$** has a mean of **`r plogis(summary(out2)[[1]]["beta1","Mean"] + summary(out2)[[1]]["beta0","Mean"])`** which is the probability of children vaccinated from households whose income between 133% and 400% ,  with a 95% credible HPD interval of **(`r plogis(intvals[1, 2] + intvals[2, 2])`, `r plogis(intvals[1, 3] + intvals[2, 3])`)** in which the proportion lies with 95% probability.
-  - The Posterior density with relation to **$\beta_2$** has a mean of **`r plogis(summary(out2)[[1]]["beta2","Mean"] + summary(out2)[[1]]["beta0","Mean"])`** which is the probability of children vaccinated from households whose income is more than 400%,  with a 95% credible HPD interval of**(`r plogis(intvals[1, 2] + intvals[3, 2])`, `r plogis(intvals[1, 3] + intvals[3, 3])`)** in which the proportion lies with 95% probability.
+* The Posterior density with relation to **$\beta_0$** has a mean of **`r plogis(summary(out2)[[1]]["beta0","Mean"])`** which is the probability of children vaccinated from households whose income is less than 133%,  with a 95% credible HPD interval of **(`r plogis(intvals[1, 2])`, `r plogis(intvals[1, 3])`)** in which the proportion lies with 95% probability.
+* The Posterior density with relation to **$\beta_1$** has a mean of **`r plogis(summary(out2)[[1]]["beta1","Mean"] + summary(out2)[[1]]["beta0","Mean"])`** which is the probability of children vaccinated from households whose income between 133% and 400% ,  with a 95% credible HPD interval of **(`r plogis(intvals[1, 2] + intvals[2, 2])`, `r plogis(intvals[1, 3] + intvals[2, 3])`)** in which the proportion lies with 95% probability.
+* The Posterior density with relation to **$\beta_2$** has a mean of **`r plogis(summary(out2)[[1]]["beta2","Mean"] + summary(out2)[[1]]["beta0","Mean"])`** which is the probability of children vaccinated from households whose income is more than 400%,  with a 95% credible HPD interval of**(`r plogis(intvals[1, 2] + intvals[3, 2])`, `r plogis(intvals[1, 3] + intvals[3, 3])`)** in which the proportion lies with 95% probability.
 
 # Question 4
 
